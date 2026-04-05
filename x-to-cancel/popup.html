@@ -4,18 +4,60 @@
   <meta charset="UTF-8" />
   <style>
     body {
-        font-family: system-ui, sans-serif;
-        padding: 10px;
-        min-width: 180px;
+      font-family: system-ui, sans-serif;
+      padding: 10px;
+      min-width: 180px;
     }
     button {
-        width: 100%;
-        padding: 6px;
-        cursor: pointer;
+      width: 100%;
+      padding: 6px;
+      cursor: pointer;
     }
     #info {
-        color: #666;
-        font-size: 13px;
+      color: #666;
+      font-size: 13px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #ccc;
+      border-radius: 20px;
+      transition: 0.2s;
+    }
+
+    .slider:before {
+      content: "";
+      position: absolute;
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      top: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+
+    input:checked + .slider {
+      background-color: #4caf50;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
     }
   </style>
 </head>
@@ -27,6 +69,23 @@
   <button id="replaceBtn" style="display:none;">
     Otwórz w xcancel
   </button>
+
+  <button id="copyBtn" style="display:none; margin-top:6px;">
+    Kopiuj link (fixupx)
+  </button>
+  <br>
+
+  <label class="switch">
+    <input type="checkbox" id="toggleContext">
+  <span class="slider"></span>
+  </label>
+  <span style="font-size:13px; margin-left:6px;">Menu Kontekstowe</span>
+
+  <label class="switch">
+    <input type="checkbox" id="toggleToast">
+  <span class="slider"></span>
+  </label>
+  <span style="font-size:13px; margin-left:6px;">Toast</span>
 
   <script src="popup.js"></script>
 </body>
