@@ -2,20 +2,25 @@ const WHITELIST = ["x.com", "www.x.com"];
 
 const ACTIONS = {
   copyFixupx: "fixupx.com",
-  copyXcancel: "xcancel.com"
+  openXcancel: "xcancel.com"
 };
 
 function createMenu(enabled) {
   chrome.contextMenus.removeAll(() => {
     if (!enabled) return;
 
-    Object.entries(ACTIONS).forEach(([id, host]) => {
-      chrome.contextMenus.create({
-        id,
-        title: `Kopiuj link jako ${host}`,
-        contexts: ["page", "link"],
-        documentUrlPatterns: ["*://x.com/*", "*://www.x.com/*"]
-      });
+    chrome.contextMenus.create({
+      id: "copyFixupx",
+      title: "Kopiuj link jako fixupx.com",
+      contexts: ["page", "link"],
+      documentUrlPatterns: ["*://x.com/*", "*://www.x.com/*"]
+    });
+
+    chrome.contextMenus.create({
+      id: "openXcancel",
+      title: "Otwórz jako xcancel.com",
+      contexts: ["page", "link"],
+      documentUrlPatterns: ["*://x.com/*", "*://www.x.com/*"]
     });
   });
 }
@@ -62,7 +67,7 @@ function showToast(tabId, message) {
           zIndex: 999999,
           opacity: "0",
           transform: "translateY(10px)",
-          transition: "all 0.2s ease"
+                      transition: "all 0.2s ease"
         });
 
         document.body.appendChild(toast);
@@ -85,19 +90,27 @@ function showToast(tabId, message) {
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!tab?.id) return;
+
   let targetUrl = info.linkUrl;
 
   if (!targetUrl) {
     const [result] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
-        const article = document.activeElement.closest("article") || document.querySelector("article");
+        const article =
+        document.activeElement?.closest("article") ||
+        document.querySelector("article");
+
         const link = article?.querySelector('a[href*="/status/"]');
+
         return link ? link.href : window.location.href;
       }
     });
+
     targetUrl = result?.result || tab.url;
   }
+
+  if (!targetUrl) return;
 
   const url = new URL(targetUrl);
 
@@ -107,8 +120,20 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!newHost) return;
 
   url.hostname = newHost;
-  const text = url.toString();
+  const newUrl = url.toString();
 
+  // xcancel -> otwórz nową kartę
+  if (info.menuItemId === "openXcancel") {
+    chrome.tabs.create({
+      url: newUrl,
+      active: true
+    });
+
+    showToast(tab.id, "Otwarto w nowej karcie ✔");
+    return;
+  }
+
+  // fixupx -> kopiuj
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
@@ -124,7 +149,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           textarea.remove();
         }
       },
-      args: [text]
+      args: [newUrl]
     });
 
     showToast(tab.id, "Skopiowano link ✔");
